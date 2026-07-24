@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuizQuest — Learn. Battle. Rank Up.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141833;
+    --bg-alt:#1c2148;
+    --panel:#232a58;
+    --panel-2:#2b3268;
+    --ink:#f4f2ec;
+    --ink-dim:#a9aed6;
+    --line:#3a4180;
+    --blue:#4c6fff;
+    --green:#7bd67f;
+    --amber:#ffc24b;
+    --coral:#ff6b6b;
+    --purple:#c792ff;
+    --radius-lg:22px;
+    --radius-md:14px;
+    --radius-sm:9px;
+    --shadow: 0 12px 30px rgba(6,8,26,0.45);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, #1f2456 0%, transparent 45%),
+      radial-gradient(circle at 100% 20%, #21275c 0%, transparent 40%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{font-family:'Baloo 2',sans-serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  #app{max-width:960px;margin:0 auto;padding:28px 20px 80px;}
+  .view{display:none;animation:fadein .35s ease;}
+  .view.active{display:block;}
+  @keyframes fadein{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  /* ---------- Top bar ---------- */
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;}
+  .brand{display:flex;align-items:center;gap:10px;font-family:'Baloo 2';font-weight:800;font-size:1.5rem;letter-spacing:.3px;}
+  .brand .dot{width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));box-shadow:0 0 0 4px rgba(76,111,255,.18);}
+  .navlinks{display:flex;gap:8px;}
+  .navlinks button{background:none;border:1px solid var(--line);color:var(--ink-dim);padding:8px 14px;border-radius:999px;font-size:.85rem;cursor:pointer;font-family:'Inter';font-weight:600;transition:.15s;}
+  .navlinks button:hover{color:var(--ink);border-color:var(--blue);}
+  .navlinks button.active{background:var(--blue);color:#0d1030;border-color:var(--blue);}
+
+  /* ---------- Cards / panels ---------- */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow);}
+  .panel + .panel{margin-top:18px;}
+  .eyebrow{font-family:'JetBrains Mono';font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);margin:0 0 6px;}
+  .title-xl{font-size:2.1rem;font-weight:800;margin:0 0 8px;line-height:1.15;}
+  .sub{color:var(--ink-dim);font-size:1rem;margin:0 0 22px;line-height:1.5;}
+
+  /* ---------- Buttons / inputs ---------- */
+  .btn{font-family:'Baloo 2';font-weight:700;font-size:1rem;padding:14px 22px;border-radius:var(--radius-md);border:none;cursor:pointer;transition:.15s transform,.15s box-shadow;display:inline-flex;align-items:center;gap:8px;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:linear-gradient(135deg,var(--blue),#7b8fff);color:#0b0e28;box-shadow:0 8px 18px rgba(76,111,255,.35);}
+  .btn-primary:hover{box-shadow:0 10px 22px rgba(76,111,255,.5);}
+  .btn-ghost{background:var(--panel-2);color:var(--ink);border:1px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--ink-dim);}
+  .btn-block{width:100%;justify-content:center;}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+  input[type=text],input[type=number],select{
+    width:100%;background:var(--bg-alt);border:1px solid var(--line);color:var(--ink);
+    padding:13px 14px;border-radius:var(--radius-sm);font-size:1rem;font-family:'Inter';
+  }
+  input[type=text]:focus,select:focus{outline:2px solid var(--blue);}
+  label{font-size:.8rem;color:var(--ink-dim);font-weight:600;display:block;margin-bottom:6px;}
+  .field{margin-bottom:16px;}
+  .row{display:flex;gap:14px;flex-wrap:wrap;}
+  .row > *{flex:1;min-width:160px;}
+
+  /* ---------- Home ---------- */
+  .hero{text-align:center;padding:34px 10px 10px;}
+  .hero .display{font-size:2.6rem;font-weight:800;margin:6px 0 10px;}
+  .hero .display span{background:linear-gradient(135deg,var(--blue),var(--coral));-webkit-background-clip:text;background-clip:text;color:transparent;}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;}
+  @media (max-width:640px){.mode-grid{grid-template-columns:1fr;}}
+  .mode-card{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius-md);padding:20px;cursor:pointer;text-align:left;transition:.15s;}
+  .mode-card:hover{border-color:var(--blue);transform:translateY(-2px);}
+  .mode-card .emoji{font-size:1.8rem;}
+  .mode-card h3{margin:8px 0 4px;font-size:1.15rem;}
+  .mode-card p{margin:0;color:var(--ink-dim);font-size:.88rem;line-height:1.4;}
+
+  /* ---------- Avatar builder ---------- */
+  .avatar-layout{display:flex;gap:28px;flex-wrap:wrap;}
+  .avatar-preview-wrap{flex:0 0 200px;text-align:center;}
+  .avatar-options{flex:1;min-width:260px;}
+  .avatar{width:150px;height:150px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 -14px 24px rgba(0,0,0,.18), 0 10px 20px rgba(0,0,0,.3);}
+  .avatar .face{position:relative;width:100%;height:100%;}
+  .avatar .eyes{position:absolute;top:52px;left:0;right:0;display:flex;justify-content:center;gap:26px;}
+  .avatar .eye{width:12px;height:12px;background:#141833;border-radius:50%;}
+  .avatar .mouth{position:absolute;bottom:38px;left:0;right:0;display:flex;justify-content:center;}
+  .avatar .mouth div{width:34px;height:16px;border-bottom:5px solid #141833;border-radius:0 0 40px 40px;}
+  .avatar .accessory{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:2.6rem;}
+  .avatar-name{margin-top:12px;font-family:'Baloo 2';font-weight:700;font-size:1.1rem;}
+  .swatches{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .swatch{width:36px;height:36px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:.15s;}
+  .swatch.selected{border-color:var(--ink);transform:scale(1.08);}
+  .chip-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+  .chip{background:var(--bg-alt);border:1px solid var(--line);padding:9px 15px;border-radius:999px;cursor:pointer;font-size:.9rem;font-weight:600;}
+  .chip.selected{background:var(--blue);border-color:var(--blue);color:#0b0e28;}
+
+  /* ---------- Lobby ---------- */
+  .room-code{font-family:'JetBrains Mono';font-weight:700;font-size:2rem;letter-spacing:.12em;background:var(--bg-alt);border:1px dashed var(--line);border-radius:var(--radius-md);padding:14px 20px;text-align:center;margin:14px 0;}
+  .player-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px;margin-top:16px;}
+  .player-chip{background:var(--bg-alt);border:1px solid var(--line);border-radius:var(--radius-md);padding:12px 8px;text-align:center;}
+  .player-chip .mini-avatar{width:46px;height:46px;border-radius:50%;margin:0 auto 6px;position:relative;}
+  .player-chip .name{font-size:.8rem;font-weight:600;}
+  .player-chip.host .name::after{content:" 👑";}
+  .note{background:rgba(255,194,75,.1);border:1px solid rgba(255,194,75,.35);color:#ffd98a;border-radius:var(--radius-sm);padding:12px 14px;font-size:.83rem;line-height:1.5;margin-top:16px;}
+
+  /* ---------- Quiz play ---------- */
+  .quiz-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+  .qcount{font-family:'JetBrains Mono';color:var(--ink-dim);font-size:.85rem;}
+  .timerbar-track{height:10px;background:var(--bg-alt);border-radius:999px;overflow:hidden;margin-bottom:22px;}
+  .timerbar-fill{height:100%;background:linear-gradient(90deg,var(--green),var(--amber),var(--coral));transition:width .2s linear;}
+  .question-text{font-size:1.4rem;font-weight:700;font-family:'Baloo 2';margin-bottom:22px;line-height:1.3;}
+  .options-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media (max-width:560px){.options-grid{grid-template-columns:1fr;}}
+  .opt-btn{text-align:left;padding:18px;border-radius:var(--radius-md);border:2px solid var(--line);background:var(--bg-alt);color:var(--ink);font-size:1rem;font-weight:600;cursor:pointer;font-family:'Inter';}
+  .opt-btn:hover{border-color:var(--blue);}
+  .opt-btn.correct{border-color:var(--green);background:rgba(123,214,127,.15);}
+  .opt-btn.wrong{border-color:var(--coral);background:rgba(255,107,107,.15);}
+  .opt-btn:disabled{cursor:default;}
+  .opt-letter{display:inline-block;width:24px;height:24px;border-radius:6px;background:var(--panel-2);text-align:center;line-height:24px;margin-right:10px;font-size:.85rem;}
+  .mini-board{margin-top:24px;}
+  .mini-board .mb-row{display:flex;justify-content:space-between;padding:9px 4px;border-bottom:1px solid var(--line);font-size:.92rem;}
+  .mini-board .mb-row:last-child{border-bottom:none;}
+  .score-pop{font-family:'JetBrains Mono';font-weight:700;color:var(--green);}
+
+  /* ---------- Podium / results ---------- */
+  .podium{display:flex;align-items:flex-end;justify-content:center;gap:14px;margin:30px 0 14px;}
+  .podium-slot{text-align:center;}
+  .podium-slot .p-avatar{width:64px;height:64px;border-radius:50%;margin:0 auto 8px;}
+  .podium-block{border-radius:10px 10px 0 0;display:flex;align-items:flex-start;justify-content:center;padding-top:8px;font-family:'JetBrains Mono';font-weight:700;color:#0b0e28;}
+  .podium-slot.first .podium-block{height:130px;background:linear-gradient(180deg,#ffe08a,var(--amber));width:110px;}
+  .podium-slot.second .podium-block{height:96px;background:linear-gradient(180deg,#dfe3f5,#b7bde0);width:100px;}
+  .podium-slot.third .podium-block{height:70px;background:linear-gradient(180deg,#f0b992,#d98f5a);width:100px;}
+  .podium-slot .p-name{font-weight:700;margin-top:6px;font-size:.9rem;}
+  .podium-slot .p-score{font-size:.78rem;color:var(--ink-dim);}
+  .rest-list .rl-row{display:flex;justify-content:space-between;padding:10px 6px;border-bottom:1px solid var(--line);}
+  .rest-list .rl-row:last-child{border-bottom:none;}
+
+  /* ---------- Leaderboard (personal, all-time) ---------- */
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:6px;}
+  .stat-card{background:var(--bg-alt);border:1px solid var(--line);border-radius:var(--radius-md);padding:18px;text-align:center;}
+  .stat-card .num{font-family:'JetBrains Mono';font-size:1.7rem;font-weight:700;}
+  .stat-card .lab{font-size:.78rem;color:var(--ink-dim);margin-top:4px;}
+  .history-row{display:flex;justify-content:space-between;padding:9px 4px;border-bottom:1px solid var(--line);font-size:.88rem;color:var(--ink-dim);}
+
+  .backlink{background:none;border:none;color:var(--ink-dim);cursor:pointer;font-size:.85rem;margin-bottom:14px;display:inline-flex;align-items:center;gap:5px;padding:0;}
+  .backlink:hover{color:var(--ink);}
+  .footer-note{text-align:center;color:var(--ink-dim);font-size:.78rem;margin-top:36px;line-height:1.6;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> QuizQuest</div>
+    <div class="navlinks">
+      <button data-nav="home">Home</button>
+      <button data-nav="leaderboard">My Stats</button>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div class="view" id="view-home">
+    <div class="hero">
+      <p class="eyebrow">learn something · beat your friends</p>
+      <h1 class="display">Turn any chapter into a <span>live quiz battle</span></h1>
+      <p class="sub">Build your avatar, pick a subject, and challenge your friends in a shared lobby — or play solo to warm up.</p>
+    </div>
+    <div class="panel">
+      <div class="field">
+        <label for="input-name">Your name</label>
+        <input type="text" id="input-name" placeholder="e.g. Riya" maxlength="16">
+      </div>
+      <div class="mode-grid">
+        <div class="mode-card" id="mode-solo">
+          <div class="emoji">🎯</div>
+          <h3>Solo Practice</h3>
+          <p>Pick a topic and play right away. Great for a quick warm-up round.</p>
+        </div>
+        <div class="mode-card" id="mode-create">
+          <div class="emoji">🛋️</div>
+          <h3>Create a Lobby</h3>
+          <p>Get a room code, invite friends, and host a live group quiz.</p>
+        </div>
+        <div class="mode-card" id="mode-join">
+          <div class="emoji">🔑</div>
+          <h3>Join a Lobby</h3>
+          <p>Got a room code from a friend? Hop into their game.</p>
+        </div>
+        <div class="mode-card" id="mode-avatar">
+          <div class="emoji">🧑‍🎨</div>
+          <h3>Customize Avatar</h3>
+          <p>Change your look before you jump into a game.</p>
+        </div>
+      </div>
+    </div>
+    <p class="footer-note">Prototype build — for the live demo, open this page in a couple of browser tabs to simulate friends joining the same lobby.</p>
+  </div>
+
+  <!-- AVATAR BUILDER -->
+  <div class="view" id="view-avatar">
+    <button class="backlink" data-nav="home">← Back</button>
+    <div class="panel">
+      <p class="eyebrow">step 1</p>
+      <h2 class="title-xl">Build your avatar</h2>
+      <p class="sub">This is how you'll show up to everyone else in the lobby.</p>
+      <div class="avatar-layout">
+        <div class="avatar-preview-wrap">
+          <div class="avatar" id="avatar-preview">
+            <div class="face">
+              <div class="eyes"><div class="eye"></div><div class="eye"></div></div>
+              <div class="mouth"><div></div></div>
+              <div class="accessory" id="avatar-accessory"></div>
+            </div>
+          </div>
+          <div class="avatar-name" id="avatar-name-preview">You</div>
+        </div>
+        <div class="avatar-options">
+          <label>Color</label>
+          <div class="swatches" id="color-swatches"></div>
+          <label>Accessory</label>
+          <div class="chip-row" id="accessory-chips"></div>
+          <button class="btn btn-primary" id="btn-save-avatar">Save &amp; Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE LOBBY (topic picker for host, shown before room exists) -->
+  <div class="view" id="view-join-form">
+    <button class="backlink" data-nav="home">← Back</button>
+    <div class="panel">
+      <p class="eyebrow" id="join-form-eyebrow">join a lobby</p>
+      <h2 class="title-xl" id="join-form-title">Enter room code</h2>
+      <div class="field">
+        <label for="input-room-code">Room code</label>
+        <input type="text" id="input-room-code" class="mono" placeholder="e.g. 4821" maxlength="4">
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-do-join">Join Lobby</button>
+    </div>
+  </div>
+
+  <!-- LOBBY -->
+  <div class="view" id="view-lobby">
+    <button class="backlink" data-nav="home">← Leave lobby</button>
+    <div class="panel">
+      <p class="eyebrow">lobby</p>
+      <h2 class="title-xl">Waiting for players</h2>
+      <p class="sub">Share this code with friends — they can join from another tab or device on this page.</p>
+      <div class="room-code" id="lobby-room-code">0000</div>
+      <div class="player-list" id="lobby-player-list"></div>
+
+      <div id="host-controls" style="margin-top:24px;">
+        <div class="row">
+          <div class="field">
+            <label for="select-subject">Subject</label>
+            <select id="select-subject"></select>
+          </div>
+          <div class="field">
+            <label for="select-chapter">Chapter</label>
+            <select id="select-chapter"></select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="input-custom-topic">Or type your own topic instead (demo mode)</label>
+          <input type="text" id="input-custom-topic" placeholder="e.g. Photosynthesis, The French Revolution...">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="select-count">Questions</label>
+            <select id="select-count">
+              <option value="5">5</option>
+              <option value="8" selected>8</option>
+              <option value="10">10</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="select-timer">Seconds per question</label>
+            <select id="select-timer">
+              <option value="10">10</option>
+              <option value="15" selected>15</option>
+              <option value="20">20</option>
+              <option value="30">30</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-block" id="btn-start-game">Start Game 🚀</button>
+        <div class="note" id="custom-topic-note" style="display:none;">✨ Demo mode: typing a custom topic generates placeholder questions instantly so you can show the flow. The full version would call an AI model to write real questions about your exact topic.</div>
+      </div>
+      <div id="guest-waiting" style="display:none;">
+        <p class="sub" style="margin-top:20px;">Waiting for the host to start the game…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUIZ PLAY -->
+  <div class="view" id="view-quiz">
+    <div class="panel">
+      <div class="quiz-topbar">
+        <span class="eyebrow" id="quiz-subject-label">Subject</span>
+        <span class="qcount" id="quiz-progress">Q1 / 8</span>
+      </div>
+      <div class="timerbar-track"><div class="timerbar-fill" id="timer-fill"></div></div>
+      <div class="question-text" id="question-text">Question goes here?</div>
+      <div class="options-grid" id="options-grid"></div>
+      <div class="mini-board" id="mini-board"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS / PODIUM -->
+  <div class="view" id="view-results">
+    <div class="panel">
+      <p class="eyebrow">game over</p>
+      <h2 class="title-xl">Final Results</h2>
+      <div class="podium" id="podium"></div>
+      <div class="rest-list" id="rest-list"></div>
+      <div class="row" style="margin-top:22px;">
+        <button class="btn btn-ghost btn-block" data-nav="home">Back to Home</button>
+        <button class="btn btn-primary btn-block" id="btn-play-again">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD / MY STATS -->
+  <div class="view" id="view-leaderboard">
+    <button class="backlink" data-nav="home">← Back</button>
+    <div class="panel">
+      <p class="eyebrow">this device</p>
+      <h2 class="title-xl">Your all-time stats</h2>
+      <p class="sub">Tracked locally so you can show progress across multiple games during the demo.</p>
+      <div class="stat-grid">
+        <div class="stat-card"><div class="num" id="stat-games">0</div><div class="lab">Quizzes played</div></div>
+        <div class="stat-card"><div class="num" id="stat-correct">0</div><div class="lab">Correct answers</div></div>
+        <div class="stat-card"><div class="num" id="stat-accuracy">0%</div><div class="lab">Accuracy</div></div>
+        <div class="stat-card"><div class="num" id="stat-best">0</div><div class="lab">Best score</div></div>
+      </div>
+      <div id="history-list" style="margin-top:18px;"></div>
+      <div class="note">In the full version, accounts + a shared database would make this a real cross-player leaderboard instead of a per-device one.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================================
+   QUIZQUEST — hackathon demo build
+   Single-file vanilla JS app. No build step, no server required.
+   Multiplayer lobbies are simulated with BroadcastChannel, which only
+   syncs tabs/windows within the SAME browser on the SAME device — perfect
+   for a live demo (open a few tabs), but a real deployment would replace
+   this with a backend (e.g. WebSockets / Firebase) for cross-device play.
+   ========================================================================= */
+
+/* ---------------------- Question bank ---------------------- */
+// Add more subjects/chapters/questions here any time — just follow the shape.
+const QUESTION_BANK = {
+  "Math": {
+    "Algebra Basics": [
+      q("What is the value of x in 2x + 6 = 14?", ["2","4","6","8"], 1),
+      q("Which of these is a linear equation?", ["y = x^2 + 1","y = 3x + 2","y = 1/x","y = x^3"], 1),
+      q("Simplify: 3(x + 4)", ["3x + 4","3x + 12","x + 12","3x + 7"], 1),
+      q("What is the slope of the line y = 5x - 2?", ["-2","2","5","-5"], 2),
+      q("If x = 3, what is x^2 + 1?", ["9","10","7","4"], 1),
+    ],
+    "Geometry Foundations": [
+      q("How many degrees are in a triangle's interior angles?", ["90","180","270","360"], 1),
+      q("What do you call a polygon with 5 sides?", ["Hexagon","Pentagon","Heptagon","Octagon"], 1),
+      q("The area of a circle is given by:", ["2πr","πr^2","πd","r^2"], 1),
+      q("Two lines that never meet are called:", ["Perpendicular","Intersecting","Parallel","Diagonal"], 2),
+      q("A right angle measures:", ["45°","60°","90°","180°"], 2),
+    ]
+  },
+  "Science": {
+    "Cell Biology": [
+      q("What is the 'powerhouse of the cell'?", ["Nucleus","Ribosome","Mitochondria","Golgi apparatus"], 2),
+      q("Which structure controls what enters and exits a cell?", ["Cell wall","Cell membrane","Nucleolus","Vacuole"], 1),
+      q("Plant cells, unlike animal cells, have a:", ["Nucleus","Cell membrane","Cell wall","Cytoplasm"], 2),
+      q("DNA is found mainly in the:", ["Mitochondria","Nucleus","Cytoplasm","Cell membrane"], 1),
+      q("Which organelle helps package and ship proteins?", ["Golgi apparatus","Lysosome","Ribosome","Vacuole"], 0),
+    ],
+    "States of Matter": [
+      q("Which state of matter has a fixed shape and volume?", ["Gas","Liquid","Solid","Plasma"], 2),
+      q("What is it called when a liquid turns into a gas?", ["Condensation","Evaporation","Freezing","Sublimation"], 1),
+      q("Ice turning directly into water vapor is called:", ["Sublimation","Melting","Deposition","Evaporation"], 0),
+      q("Which state of matter takes the shape of its container but keeps its volume?", ["Solid","Liquid","Gas","Plasma"], 1),
+      q("Water freezes at what temperature (°C)?", ["0","32","100","-10"], 0),
+    ]
+  },
+  "History": {
+    "World War II": [
+      q("In what year did World War II end?", ["1943","1944","1945","1946"], 2),
+      q("Which event brought the United States into WWII?", ["D-Day","Attack on Pearl Harbor","Battle of Britain","Fall of Berlin"], 1),
+      q("The Allied invasion of Normandy is known as:", ["D-Day","V-Day","Blitzkrieg","Armistice"], 0),
+      q("Which country was NOT part of the main Axis powers?", ["Germany","Italy","Japan","France"], 3),
+      q("The war in Europe ended with the surrender of:", ["Japan","Italy","Germany","Spain"], 2),
+    ],
+    "Ancient Civilizations": [
+      q("The pyramids of Giza were built by which civilization?", ["Mesopotamians","Egyptians","Romans","Greeks"], 1),
+      q("Which river was central to Ancient Egyptian civilization?", ["Tigris","Euphrates","Nile","Indus"], 2),
+      q("The Ancient Greeks are often credited with inventing:", ["Gunpowder","Democracy","Paper currency","The printing press"], 1),
+      q("Which ancient civilization built Machu Picchu?", ["Aztec","Maya","Inca","Olmec"], 2),
+      q("Cuneiform writing originated in:", ["Egypt","Mesopotamia","Greece","China"], 1),
+    ]
+  },
+  "Geography": {
+    "World Capitals": [
+      q("What is the capital of Japan?", ["Osaka","Kyoto","Tokyo","Nagoya"], 2),
+      q("What is the capital of Australia?", ["Sydney","Melbourne","Canberra","Perth"], 2),
+      q("What is the capital of Canada?", ["Toronto","Vancouver","Ottawa","Montreal"], 2),
+      q("What is the capital of Egypt?", ["Cairo","Alexandria","Giza","Luxor"], 0),
+      q("What is the capital of Brazil?", ["Rio de Janeiro","São Paulo","Brasília","Salvador"], 2),
+    ],
+    "Physical Geography": [
+      q("What is the longest river in the world?", ["Amazon","Nile","Yangtze","Mississippi"], 1),
+      q("Which is the largest desert in the world?", ["Sahara","Gobi","Antarctic","Arabian"], 2),
+      q("Mount Everest is located in which mountain range?", ["Andes","Alps","Himalayas","Rockies"], 2),
+      q("Which ocean is the largest?", ["Atlantic","Indian","Arctic","Pacific"], 3),
+      q("What is the smallest continent by land area?", ["Europe","Australia","Antarctica","South America"], 1),
+    ]
+  }
+};
+function q(question, options, correctIndex){ return {question, options, correctIndex}; }
+
+// Fallback generator used when the host types a custom topic instead of
+// picking a subject/chapter. Clearly a placeholder for a real AI call.
+function generateDemoQuestions(topic, count){
+  const templates = [
+    ["Which of these is most closely associated with {t}?", 0],
+    ["{t} is most commonly studied as part of which kind of subject?", 1],
+    ["A quick fact-check: {t} is generally considered to be a topic in...", 2],
+    ["True or false framing aside, {t} would most likely appear in a chapter about...", 0],
+    ["If you had to place {t} on a syllabus, it would fit best under...", 1],
+  ];
+  const genericOptionSets = [
+    ["Core concept of " + topic, "Unrelated trivia", "A minor footnote", "A common misconception"],
+    ["Science", "History", "Math", "Geography"],
+    ["An introductory idea", "An advanced, rarely-taught idea", "A disproven theory", "A fictional concept"],
+  ];
+  const out = [];
+  for(let i=0;i<count;i++){
+    const tmpl = templates[i % templates.length];
+    const opts = genericOptionSets[i % genericOptionSets.length];
+    out.push(q(tmpl[0].replace("{t}", topic), opts, tmpl[1] % opts.length));
+  }
+  return out;
+}
+
+/* ---------------------- Persistent (local) state ---------------------- */
+const LS_PROFILE = "qq_profile";
+const LS_STATS = "qq_stats";
+
+function loadProfile(){
+  try{ return JSON.parse(localStorage.getItem(LS_PROFILE)) || defaultProfile(); }
+  catch(e){ return defaultProfile(); }
+}
+function defaultProfile(){
+  return { name:"", avatar:{ color:"#4c6fff", accessory:"none" } };
+}
+function saveProfile(p){ localStorage.setItem(LS_PROFILE, JSON.stringify(p)); }
+
+function loadStats(){
+  try{ return JSON.parse(localStorage.getItem(LS_STATS)) || defaultStats(); }
+  catch(e){ return defaultStats(); }
+}
+function defaultStats(){
+  return { gamesPlayed:0, correctAnswers:0, totalAnswers:0, bestScore:0, history:[] };
+}
+function saveStats(s){ localStorage.setItem(LS_STATS, JSON.stringify(s)); }
+
+let profile = loadProfile();
+let stats = loadStats();
+
+/* ---------------------- App / view state ---------------------- */
+const COLORS = ["#4c6fff","#7bd67f","#ffc24b","#ff6b6b","#c792ff","#4bd6c9"];
+const ACCESSORIES = [
+  {id:"none", label:"None", emoji:""},
+  {id:"crown", label:"Crown", emoji:"👑"},
+  {id:"glasses", label:"Glasses", emoji:"🕶️"},
+  {id:"cap", label:"Cap", emoji:"🧢"},
+  {id:"grad", label:"Grad Cap", emoji:"🎓"},
+];
+
+let session = {
+  roomCode:null,
+  isHost:false,
+  channel:null,
+  players:[],           // [{id,name,avatar,score,streak}]
+  quiz:null,            // {subject, chapter, questions:[...]}
+  currentIndex:-1,
+  questionEndTime:0,
+  timerHandle:null,
+  answeredThisQuestion:false,
+  playerId: Math.random().toString(36).slice(2,10),
+  solo:false,
+  quizScore:0,
+  quizCorrectCount:0,
+};
+
+/* ---------------------- Navigation ---------------------- */
+function showView(id){
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  document.querySelectorAll(".navlinks button").forEach(b=>b.classList.remove("active"));
+  if(id==="view-home") document.querySelector('[data-nav="home"]').classList.add("active");
+  if(id==="view-leaderboard") document.querySelector('[data-nav="leaderboard"]').classList.add("active");
+}
+document.querySelectorAll('[data-nav]').forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const target = btn.getAttribute("data-nav");
+    if(target==="home") leaveRoomIfAny();
+    if(target==="leaderboard") renderLeaderboard();
+    showView("view-" + target);
+  });
+});
+
+/* ---------------------- Home actions ---------------------- */
+document.getElementById("mode-avatar").addEventListener("click", ()=>{
+  captureNameInput();
+  renderAvatarBuilder();
+  showView("view-avatar");
+});
+document.getElementById("mode-solo").addEventListener("click", ()=>{
+  captureNameInput();
+  if(!requireName()) return;
+  session.solo = true;
+  session.isHost = true;
+  session.roomCode = null;
+  session.players = [makeLocalPlayer()];
+  renderLobbyHostControls();
+  document.getElementById("host-controls").style.display = "block";
+  document.getElementById("guest-waiting").style.display = "none";
+  document.getElementById("lobby-room-code").textContent = "SOLO";
+  renderPlayerList();
+  showView("view-lobby");
+});
+document.getElementById("mode-create").addEventListener("click", ()=>{
+  captureNameInput();
+  if(!requireName()) return;
+  createRoom();
+});
+document.getElementById("mode-join").addEventListener("click", ()=>{
+  captureNameInput();
+  if(!requireName()) return;
+  document.getElementById("join-form-eyebrow").textContent = "join a lobby";
+  document.getElementById("join-form-title").textContent = "Enter room code";
+  showView("view-join-form");
+});
+document.getElementById("btn-do-join").addEventListener("click", ()=>{
+  const code = document.getElementById("input-room-code").value.trim();
+  if(!code){ alert("Enter a room code first."); return; }
+  joinRoom(code);
+});
+
+function captureNameInput(){
+  const val = document.getElementById("input-name").value.trim();
+  if(val) profile.name = val;
+  saveProfile(profile);
+}
+function requireName(){
+  if(!profile.name){
+    alert("Please enter your name first.");
+    return false;
+  }
+  return true;
+}
+function makeLocalPlayer(){
+  return { id:session.playerId, name:profile.name, avatar:{...profile.avatar}, score:0, streak:0 };
+}
+
+/* ---------------------- Avatar builder ---------------------- */
+function renderAvatarBuilder(){
+  const swWrap = document.getElementById("color-swatches");
+  swWrap.innerHTML = "";
+  COLORS.forEach(c=>{
+    const el = document.createElement("div");
+    el.className = "swatch" + (profile.avatar.color===c ? " selected":"");
+    el.style.background = c;
+    el.addEventListener("click", ()=>{ profile.avatar.color = c; renderAvatarBuilder(); });
+    swWrap.appendChild(el);
+  });
+  const chipWrap = document.getElementById("accessory-chips");
+  chipWrap.innerHTML = "";
+  ACCESSORIES.forEach(a=>{
+    const el = document.createElement("div");
+    el.className = "chip" + (profile.avatar.accessory===a.id ? " selected":"");
+    el.textContent = (a.emoji ? a.emoji+" ":"") + a.label;
+    el.addEventListener("click", ()=>{ profile.avatar.accessory = a.id; renderAvatarBuilder(); });
+    chipWrap.appendChild(el);
+  });
+  applyAvatarToEl(document.getElementById("avatar-preview"), profile.avatar);
+  document.getElementById("avatar-accessory").textContent = ACCESSORIES.find(a=>a.id===profile.avatar.accessory)?.emoji || "";
+  document.getElementById("avatar-name-preview").textContent = profile.name || "You";
+}
+function applyAvatarToEl(el, avatar){
+  el.style.background = `radial-gradient(circle at 35% 30%, ${lighten(avatar.color)}, ${avatar.color})`;
+}
+function lighten(hex){
+  // quick lighten for a simple gradient highlight
+  const num = parseInt(hex.slice(1),16);
+  const r = Math.min(255, (num>>16)+60), g = Math.min(255, ((num>>8)&255)+60), b = Math.min(255,(num&255)+60);
+  return `rgb(${r},${g},${b})`;
+}
+document.getElementById("btn-save-avatar").addEventListener("click", ()=>{
+  saveProfile(profile);
+  showView("view-home");
+});
+
+/* ---------------------- Rooms / BroadcastChannel ---------------------- */
+function createRoom(){
+  const code = String(Math.floor(1000 + Math.random()*9000));
+  session.roomCode = code;
+  session.isHost = true;
+  session.solo = false;
+  session.players = [makeLocalPlayer()];
+  connectChannel(code);
+  document.getElementById("lobby-room-code").textContent = code;
+  document.getElementById("host-controls").style.display = "block";
+  document.getElementById("guest-waiting").style.display = "none";
+  renderLobbyHostControls();
+  renderPlayerList();
+  showView("view-lobby");
+}
+function joinRoom(code){
+  session.roomCode = code;
+  session.isHost = false;
+  session.solo = false;
+  session.players = [];
+  connectChannel(code);
+  document.getElementById("lobby-room-code").textContent = code;
+  document.getElementById("host-controls").style.display = "none";
+  document.getElementById("guest-waiting").style.display = "block";
+  broadcast({type:"join", player: makeLocalPlayer()});
+  showView("view-lobby");
+}
+function connectChannel(code){
+  if(session.channel) session.channel.close();
+  session.channel = new BroadcastChannel("quizquest_room_" + code);
+  session.channel.onmessage = (e)=> handleMessage(e.data);
+}
+function broadcast(msg){
+  if(session.channel) session.channel.postMessage(msg);
+}
+function leaveRoomIfAny(){
+  if(session.channel){ session.channel.close(); session.channel=null; }
+  session.roomCode=null; session.isHost=false; session.solo=false;
+  session.players=[]; session.quiz=null; session.currentIndex=-1;
+  clearTimeout(session.timerHandle);
+}
+
+function handleMessage(msg){
+  if(session.isHost){
+    if(msg.type==="join"){
+      if(!session.players.find(p=>p.id===msg.player.id)){
+        session.players.push(msg.player);
+        renderPlayerList();
+      }
+      // bring the new player up to date with current player list
+      broadcast({type:"state-sync", players:session.players});
+    } else if(msg.type==="answer"){
+      handleHostReceivedAnswer(msg);
+    }
+  } else {
+    if(msg.type==="state-sync"){
+      session.players = msg.players;
+      renderPlayerList();
+    } else if(msg.type==="start-game"){
+      session.quiz = msg.quiz;
+      session.players = msg.players;
+      startQuizUI();
+    } else if(msg.type==="question"){
+      session.currentIndex = msg.index;
+      session.questionEndTime = msg.endTime;
+      session.answeredThisQuestion = false;
+      renderQuestion();
+    } else if(msg.type==="question-result"){
+      session.players = msg.players;
+      renderMiniBoard(msg.correctIndex);
+    } else if(msg.type==="game-end"){
+      session.players = msg.players;
+      renderResults();
+      showView("view-results");
+    }
+  }
+}
+
+/* ---------------------- Lobby host controls ---------------------- */
+function renderLobbyHostControls(){
+  const subjSel = document.getElementById("select-subject");
+  subjSel.innerHTML = "";
+  Object.keys(QUESTION_BANK).forEach(subj=>{
+    const opt = document.createElement("option");
+    opt.value = subj; opt.textContent = subj;
+    subjSel.appendChild(opt);
+  });
+  renderChapterOptions();
+  subjSel.onchange = renderChapterOptions;
+  document.getElementById("input-custom-topic").oninput = (e)=>{
+    document.getElementById("custom-topic-note").style.display = e.target.value.trim() ? "block":"none";
+  };
+}
+function renderChapterOptions(){
+  const subj = document.getElementById("select-subject").value;
+  const chapSel = document.getElementById("select-chapter");
+  chapSel.innerHTML = "";
+  Object.keys(QUESTION_BANK[subj]).forEach(chap=>{
+    const opt = document.createElement("option");
+    opt.value = chap; opt.textContent = chap;
+    chapSel.appendChild(opt);
+  });
+}
+function renderPlayerList(){
+  const wrap = document.getElementById("lobby-player-list");
+  wrap.innerHTML = "";
+  session.players.forEach((p,i)=>{
+    const el = document.createElement("div");
+    el.className = "player-chip" + (i===0 && session.isHost ? " host":"");
+    const av = document.createElement("div");
+    av.className = "mini-avatar";
+    applyAvatarToEl(av, p.avatar);
+    const nm = document.createElement("div");
+    nm.className = "name"; nm.textContent = p.name;
+    el.appendChild(av); el.appendChild(nm);
+    wrap.appendChild(el);
+  });
+}
+
+document.getElementById("btn-start-game").addEventListener("click", ()=>{
+  const customTopic = document.getElementById("input-custom-topic").value.trim();
+  const count = parseInt(document.getElementById("select-count").value, 10);
+  let subject, chapter, pool;
+  if(customTopic){
+    subject = "Custom"; chapter = customTopic;
+    pool = generateDemoQuestions(customTopic, count);
+  } else {
+    subject = document.getElementById("select-subject").value;
+    chapter = document.getElementById("select-chapter").value;
+    pool = shuffle([...QUESTION_BANK[subject][chapter]]).slice(0, count);
+  }
+  const timerSeconds = parseInt(document.getElementById("select-timer").value, 10);
+  session.quiz = { subject, chapter, timerSeconds, questions: pool };
+  session.players.forEach(p=>{ p.score=0; p.streak=0; });
+  broadcast({type:"start-game", quiz:session.quiz, players:session.players});
+  startQuizUI();
+});
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+/* ---------------------- Quiz engine ---------------------- */
+function startQuizUI(){
+  showView("view-quiz");
+  session.quizScore = 0;
+  session.quizCorrectCount = 0;
+  if(session.isHost){
+    goToQuestion(0);
+  }
+}
+function goToQuestion(index){
+  if(index >= session.quiz.questions.length){
+    endGame();
+    return;
+  }
+  session.currentIndex = index;
+  const seconds = session.quiz.timerSeconds || 15;
+  session.questionEndTime = Date.now() + seconds*1000;
+  session.answeredThisQuestion = false;
+  if(!session.solo){
+    broadcast({type:"question", index, endTime:session.questionEndTime});
+  }
+  renderQuestion();
+}
+function renderQuestion(){
+  const query = session.quiz.questions[session.currentIndex];
+  document.getElementById("quiz-subject-label").textContent = session.quiz.subject + " · " + session.quiz.chapter;
+  document.getElementById("quiz-progress").textContent = "Q" + (session.currentIndex+1) + " / " + session.quiz.questions.length;
+  document.getElementById("question-text").textContent = query.question;
+  document.getElementById("mini-board").innerHTML = "";
+  const grid = document.getElementById("options-grid");
+  grid.innerHTML = "";
+  const letters = ["A","B","C","D"];
+  query.options.forEach((opt,i)=>{
+    const btn = document.createElement("button");
+    btn.className = "opt-btn";
+    btn.innerHTML = `<span class="opt-letter">${letters[i]}</span>${escapeHtml(opt)}`;
+    btn.addEventListener("click", ()=> submitAnswer(i, btn));
+    grid.appendChild(btn);
+  });
+  runTimer();
+}
+function runTimer(){
+  clearTimeout(session.timerHandle);
+  const fill = document.getElementById("timer-fill");
+  const seconds = session.quiz.timerSeconds || 15;
+  function tick(){
+    const remaining = session.questionEndTime - Date.now();
+    const pct = Math.max(0, Math.min(100, (remaining/(seconds*1000))*100));
+    fill.style.width = pct + "%";
+    if(remaining <= 0){
+      lockInAnswer(-1); // time's up, no answer
+      return;
+    }
+    session.timerHandle = setTimeout(tick, 100);
+  }
+  tick();
+}
+function submitAnswer(choiceIndex, btnEl){
+  if(session.answeredThisQuestion) return;
+  document.querySelectorAll(".opt-btn").forEach(b=>b.disabled=true);
+  lockInAnswer(choiceIndex, btnEl);
+}
+function lockInAnswer(choiceIndex, btnEl){
+  if(session.answeredThisQuestion) return;
+  session.answeredThisQuestion = true;
+  clearTimeout(session.timerHandle);
+  const query = session.quiz.questions[session.currentIndex];
+  const correct = choiceIndex === query.correctIndex;
+  const seconds = session.quiz.timerSeconds || 15;
+  const remainingFrac = Math.max(0, (session.questionEndTime - Date.now())/(seconds*1000));
+  const points = correct ? Math.round(100 + remainingFrac*100) : 0;
+
+  document.querySelectorAll(".opt-btn").forEach((b,i)=>{
+    b.disabled = true;
+    if(i===query.correctIndex) b.classList.add("correct");
+    else if(i===choiceIndex) b.classList.add("wrong");
+  });
+
+  if(correct) session.quizCorrectCount++;
+  session.quizScore += points;
+
+  if(session.solo){
+    const me = session.players[0];
+    me.score += points;
+    setTimeout(()=>{ goToQuestion(session.currentIndex+1); }, 1600);
+    renderMiniBoard(query.correctIndex);
+  } else if(session.isHost){
+    const me = session.players.find(p=>p.id===session.playerId);
+    if(me) me.score += points;
+    broadcast({type:"question-result", players:session.players, correctIndex:query.correctIndex});
+    renderMiniBoard(query.correctIndex);
+    setTimeout(()=>{ goToQuestion(session.currentIndex+1); }, 1800);
+  } else {
+    broadcast({type:"answer", playerId:session.playerId, questionIndex:session.currentIndex, correct, points});
+    renderMiniBoard(query.correctIndex);
+  }
+}
+function handleHostReceivedAnswer(msg){
+  if(msg.questionIndex !== session.currentIndex) return; // stale
+  const p = session.players.find(pl=>pl.id===msg.playerId);
+  if(p){ p.score += msg.points; }
+  broadcast({type:"question-result", players:session.players, correctIndex: session.quiz.questions[session.currentIndex].correctIndex});
+  renderMiniBoard(session.quiz.questions[session.currentIndex].correctIndex);
+}
+function renderMiniBoard(correctIndex){
+  const wrap = document.getElementById("mini-board");
+  const sorted = [...session.players].sort((a,b)=>b.score-a.score);
+  wrap.innerHTML = "<h3 style='margin:10px 0 6px;font-size:1rem;'>Standings</h3>" +
+    sorted.map(p=>`<div class="mb-row"><span>${escapeHtml(p.name)}</span><span class="score-pop">${p.score}</span></div>`).join("");
+}
+function endGame(){
+  clearTimeout(session.timerHandle);
+  recordSessionStats();
+  if(session.solo){
+    renderResults();
+    showView("view-results");
+  } else if(session.isHost){
+    broadcast({type:"game-end", players:session.players});
+    renderResults();
+    showView("view-results");
+  }
+}
+function recordSessionStats(){
+  const totalQ = session.quiz.questions.length;
+  stats.gamesPlayed += 1;
+  stats.correctAnswers += session.quizCorrectCount;
+  stats.totalAnswers += totalQ;
+  stats.bestScore = Math.max(stats.bestScore, session.quizScore);
+  stats.history.unshift({
+    subject: session.quiz.subject, chapter: session.quiz.chapter,
+    score: session.quizScore, correct: session.quizCorrectCount, total: totalQ,
+    date: new Date().toLocaleDateString()
+  });
+  stats.history = stats.history.slice(0,10);
+  saveStats(stats);
+}
+document.getElementById("btn-play-again").addEventListener("click", ()=>{
+  if(session.solo || session.isHost){
+    document.getElementById("host-controls").style.display="block";
+    document.getElementById("guest-waiting").style.display="none";
+    if(session.solo) document.getElementById("lobby-room-code").textContent = "SOLO";
+    renderPlayerList();
+    showView("view-lobby");
+  } else {
+    showView("view-lobby");
+  }
+});
+
+/* ---------------------- Results / podium ---------------------- */
+function renderResults(){
+  const sorted = [...session.players].sort((a,b)=>b.score-a.score);
+  const podium = document.getElementById("podium");
+  podium.innerHTML = "";
+  const order = [1,0,2]; // 2nd, 1st, 3rd visual arrangement
+  const classes = {0:"first",1:"second",2:"third"};
+  order.forEach(rank=>{
+    const p = sorted[rank];
+    if(!p) return;
+    const slot = document.createElement("div");
+    slot.className = "podium-slot " + classes[rank];
+    const av = document.createElement("div");
+    av.className = "p-avatar";
+    applyAvatarToEl(av, p.avatar);
+    slot.appendChild(av);
+    const name = document.createElement("div");
+    name.className = "p-name"; name.textContent = p.name;
+    slot.appendChild(name);
+    const score = document.createElement("div");
+    score.className = "p-score"; score.textContent = p.score + " pts";
+    slot.appendChild(score);
+    const block = document.createElement("div");
+    block.className = "podium-block";
+    block.textContent = "#" + (rank+1);
+    slot.appendChild(block);
+    podium.appendChild(slot);
+  });
+  const restWrap = document.getElementById("rest-list");
+  restWrap.innerHTML = "";
+  sorted.slice(3).forEach((p,i)=>{
+    const row = document.createElement("div");
+    row.className = "rl-row";
+    row.innerHTML = `<span>#${i+4} ${escapeHtml(p.name)}</span><span class="mono">${p.score} pts</span>`;
+    restWrap.appendChild(row);
+  });
+}
+
+/* ---------------------- Leaderboard / stats view ---------------------- */
+function renderLeaderboard(){
+  document.getElementById("stat-games").textContent = stats.gamesPlayed;
+  document.getElementById("stat-correct").textContent = stats.correctAnswers;
+  const acc = stats.totalAnswers ? Math.round((stats.correctAnswers/stats.totalAnswers)*100) : 0;
+  document.getElementById("stat-accuracy").textContent = acc + "%";
+  document.getElementById("stat-best").textContent = stats.bestScore;
+  const wrap = document.getElementById("history-list");
+  if(stats.history.length===0){
+    wrap.innerHTML = "<p class='sub'>No games played yet — try Solo Practice from the home screen.</p>";
+    return;
+  }
+  wrap.innerHTML = "<h3 style='font-size:1rem;margin-bottom:6px;'>Recent games</h3>" +
+    stats.history.map(h=>`<div class="history-row"><span>${escapeHtml(h.subject)} · ${escapeHtml(h.chapter)}</span><span>${h.correct}/${h.total} correct · ${h.score} pts</span></div>`).join("");
+}
+
+/* ---------------------- Utils ---------------------- */
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]));
+}
+
+/* ---------------------- Init ---------------------- */
+(function init(){
+  document.getElementById("input-name").value = profile.name || "";
+  showView("view-home");
+})();
+</script>
+</body>
+</html>
